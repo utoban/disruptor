@@ -77,12 +77,17 @@ abstract class RingBufferFields<E> extends RingBufferPad
         fill(eventFactory);
     }
 
+    /**
+     * 这个方法就是 内存预加载机制的核心
+     * @param eventFactory
+     */
     private void fill(EventFactory<E> eventFactory)
     {
         for (int i = 0; i < bufferSize; i++)
         {
             entries[BUFFER_PAD + i] = eventFactory.newInstance();
         }
+        System.out.println("entries---"+entries.toString());
     }
 
     @SuppressWarnings("unchecked")
@@ -101,6 +106,7 @@ abstract class RingBufferFields<E> extends RingBufferPad
 public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored, EventSequencer<E>, EventSink<E>
 {
     public static final long INITIAL_CURSOR_VALUE = Sequence.INITIAL_VALUE;
+    //消除伪共享（缓存行填充）
     protected long p1, p2, p3, p4, p5, p6, p7;
 
     /**

@@ -27,6 +27,7 @@ class LhsPadding
 
 class Value extends LhsPadding
 {
+    // long 类型占8个字节，左边放7个long类型=56，右边放7个long类型=56
     protected volatile long value;
 }
 
