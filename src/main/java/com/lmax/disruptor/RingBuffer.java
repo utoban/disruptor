@@ -87,7 +87,6 @@ abstract class RingBufferFields<E> extends RingBufferPad
         {
             entries[BUFFER_PAD + i] = eventFactory.newInstance();
         }
-        System.out.println("entries---"+entries.toString());
     }
 
     @SuppressWarnings("unchecked")
@@ -125,7 +124,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
     /**
      * Create a new multiple producer RingBuffer with the specified wait strategy.
      *
-     * @see MultiProducerSequencer
+     * @see MultiProducerSequencert
      * @param factory used to create the events within the ring buffer.
      * @param bufferSize number of elements to create within the ring buffer.
      * @param waitStrategy used to determine how to wait for new elements to become available.

@@ -15,9 +15,9 @@
  */
 package com.lmax.disruptor;
 
-import java.util.concurrent.locks.LockSupport;
-
 import com.lmax.disruptor.util.Util;
+
+import java.util.concurrent.locks.LockSupport;
 
 abstract class SingleProducerSequencerPad extends AbstractSequencer
 {
@@ -103,25 +103,34 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     @Override
     public long next(int n)
     {
-        if (n < 1)
+        if (n < 1) //sequence 初始值是-1
         {
             throw new IllegalArgumentException("n must be > 0");
         }
 
-        long nextValue = this.nextValue;
-
-        long nextSequence = nextValue + n;
-        long wrapPoint = nextSequence - bufferSize;
+        long nextValue = this.nextValue;// 语义级别的 ，默认为-1，nextValue 为SingleProducerSequencer的变量
+        //nextSequence  = -1 +1 ， nextSequence= 0
+        long nextSequence = nextValue + n;// 下一个消费序号
+        // wrapPoint = 0 - 10 , wrapPoint = -10 ,
+        // 用于判断当前生产者序号有没有绕过ringbuffer环
+        // 负数表示没有饶过环，正数表示绕过
+        //
+        long wrapPoint = nextSequence - bufferSize; // 11 - 10
+        // cachedValue 可能是用于缓存优化的
         long cachedGatingSequence = this.cachedValue;
-
+        //cachedGatingSequence ：他的目的是不要每次都去获取消费者最小序号，用一个缓存去接收
         if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
         {
+            //如果wrapPoint大于消费者中最小的序号，我们的程序进行阻塞（自旋操作）
             long minSequence;
+            //Util.getMinimumSequence：含义就是找到消费者中最小的序号
+            //如果你的生产者序号 大于消费者序号中最小的序号 那么 你就挂起自旋起来
+            //生产者序号 不能大于消费者序号
             while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue)))
             {
                 LockSupport.parkNanos(1L); // TODO: Use waitStrategy to spin?
             }
-
+            //cachedValue 用于接收最小的消费者序号
             this.cachedValue = minSequence;
         }
 

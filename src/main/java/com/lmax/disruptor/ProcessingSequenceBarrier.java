@@ -51,7 +51,7 @@ final class ProcessingSequenceBarrier implements SequenceBarrier
         throws AlertException, InterruptedException, TimeoutException
     {
         checkAlert();
-
+        //sequence：下一个消费者想要的序号 ，
         long availableSequence = waitStrategy.waitFor(sequence, cursorSequence, dependentSequence, this);
 
         if (availableSequence < sequence)

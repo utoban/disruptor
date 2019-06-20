@@ -108,11 +108,13 @@ public final class BatchEventProcessor<T>
         {
             throw new IllegalStateException("Thread is already running");
         }
+        //清空序号栅栏
         sequenceBarrier.clearAlert();
 
         notifyStart();
 
         T event = null;
+        //nextSequence 10 = 9+1 ：给消费者用的
         long nextSequence = sequence.get() + 1L;
         try
         {
@@ -120,15 +122,18 @@ public final class BatchEventProcessor<T>
             {
                 try
                 {
+                    //返回真实可用的序号
                     final long availableSequence = sequenceBarrier.waitFor(nextSequence);
-
+                    // availableSequence 可能是10也可能是13，因为存在多生产者
+                    //所以 nextSequence(10) <= availableSequence(13)
                     while (nextSequence <= availableSequence)
                     {
+                        //拿到具体的消费者去消费
                         event = dataProvider.get(nextSequence);
                         eventHandler.onEvent(event, nextSequence, nextSequence == availableSequence);
                         nextSequence++;
                     }
-
+                    //消费完成之后，设置1为当前序号，然后循环往复
                     sequence.set(availableSequence);
                 }
                 catch (final TimeoutException e)

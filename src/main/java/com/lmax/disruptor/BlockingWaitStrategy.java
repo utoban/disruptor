@@ -34,14 +34,18 @@ public final class BlockingWaitStrategy implements WaitStrategy
         throws AlertException, InterruptedException
     {
         long availableSequence;
+        //9 < 10
+        //cursorSequence ：ringbuffer容器最大游标（10个元素，最大游标是9）
         if ((availableSequence = cursorSequence.get()) < sequence)
         {
             lock.lock();
             try
             {
+                //如果消费者进度快于生产者，就要等待生产者投递数据
                 while ((availableSequence = cursorSequence.get()) < sequence)
                 {
                     barrier.checkAlert();
+                    //唤醒就解锁去消费
                     processorNotifyCondition.await();
                 }
             }
@@ -65,6 +69,7 @@ public final class BlockingWaitStrategy implements WaitStrategy
         lock.lock();
         try
         {
+            //生产者元素投递过来了，就唤醒消费线程
             processorNotifyCondition.signalAll();
         }
         finally

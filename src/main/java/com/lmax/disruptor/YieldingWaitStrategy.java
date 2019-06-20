@@ -32,7 +32,7 @@ public final class YieldingWaitStrategy implements WaitStrategy
     {
         long availableSequence;
         int counter = SPIN_TRIES;
-
+        //如果当前生产者序号大于消费者需要，就自旋
         while ((availableSequence = dependentSequence.get()) < sequence)
         {
             counter = applyWaitMethod(barrier, counter);
@@ -49,6 +49,7 @@ public final class YieldingWaitStrategy implements WaitStrategy
     private int applyWaitMethod(final SequenceBarrier barrier, int counter)
         throws AlertException
     {
+        //counter 自旋临界值，默认100 ，等于0之后，当前线程让步，让下一个线程继续来自旋
         barrier.checkAlert();
 
         if (0 == counter)
